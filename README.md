@@ -74,5 +74,3 @@ You can stay in touch with us and discuss project-related topics with us via the
 ## Copyright and License
 
 For copyright and license information, please check [this file](https://github.com/uofw/uofw/blob/master/COPYING).
-
-Test321
