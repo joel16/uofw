@@ -15,9 +15,12 @@ before_install:
 install:
   - sudo apt-get install doxygen g++-mingw-w64-i686 -q
   - cd ..
-  - wget http://www.mirari.fr/VmX0 -O psptoolchain.deb
-  - sudo dpkg --install psptoolchain.deb
-  - source /etc/profile.d/psptoolchain.sh
+  - git clone https://github.com/pspdev/psptoolchain
+  - cd psptoolchain
+  - sudo apt-get install g++ build-essential autoconf automake cmake doxygen bison flex libncurses5-dev libsdl1.2-dev libreadline-dev libusb-dev texinfo libgmp3-dev libmpfr-dev libelf-dev libmpc-dev libfreetype6-dev zlib1g-dev libtool libtool-bin subversion git tcl unzip wget
+  - sudo ./toolchain-sudo.sh
+  - export PSPDEV=/usr/local/pspdev
+  - export PATH=$PATH:$PSPDEV/bin
   - cd $TRAVIS_BUILD_DIR
 
 script:
