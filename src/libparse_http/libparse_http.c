@@ -3,6 +3,7 @@
 */
 
 #include <common_imp.h>
+#include <threadman_user.h>
 
 SCE_MODULE_INFO("SceParseHTTPheader_Library", SCE_MODULE_ATTR_EXCLUSIVE_LOAD | SCE_MODULE_ATTR_EXCLUSIVE_START, 1, 1);
 SCE_SDK_VERSION(SDK_VERSION);
@@ -18,9 +19,34 @@ s32 sub_000006CC(u8 *unk, u8 *status_line, s32 len);
 
 // Subroutine sceParseHttp_8077A433 - Address 0x00000000
 s32 sceParseHttpStatusLine(const u8 *status_line, u32 line_len, u32 *http_major_ver, u32 *http_minor_ver, u32 *response_code, const u8 **reason_phrase, u32 *phrase_len)
-{
-	// References _sceKernelCheckThreadStack (0xD13BDE95)
-	return 0;
+{	
+	s32 check = sceKernelCheckThreadStack();
+	s32 ret = 0x80410000;
+	if ((0x3df < check) && (status_line != 0))
+	{
+		if ((http_major_ver == 0 || http_minor_ver == 0) || ((response_code == 0 || reason_phrase == 0 || (phrase_len == 0))))
+			ret = 0x80410005;
+		else
+		{
+			ret = sub_000003A0(status_line, line_len, http_major_ver, http_minor_ver);
+			line_len = line_len - ret;
+			if (ret >= 0)
+			{
+				check = status_line + ret;
+				ret = sub_00000510(check, line_len, response_code);
+				
+				if (ret >= 0)
+				{
+					check = check + ret;
+					ret = sub_0000061C(check, line_len - ret, reason_phrase, phrase_len);
+					if (ret >= 0)
+						ret = (check + ret) - (s32)status_line;
+				}
+			}
+		}
+	}
+	
+	return ret;
 }
 
 // Subroutine sceParseHttp_AD7BFDEF - Address 0x00000118
@@ -37,17 +63,14 @@ s32 sub_000003A0(u8 *status_line, u32 line_len, s32 *http_major_ver, s32 *http_m
 	*http_major_ver = 0;
 	*http_minor_ver = 0;
 
-	s32 ret = -0x7fbcdfa0;
+	s32 ret = SCE_PARSE_HTTP_INVALID_RESPONSE;
 
-	if (8 < line_len)
+	if (line_len > 8)
 	{
 		var0 = sub_000006CC(status_line, (u8 *)"HTTP/", 5);
-		ret = -0x7fbcdfa0;
 
 		if (var0 == 0)
 		{
-			ret = -0x7fbcdfa0;
-
 			if ((*(u8 *)((s32)status_line[5] + 1) & 4) != 0)
 			{
 				var1 = status_line + 5;
@@ -66,12 +89,11 @@ s32 sub_000003A0(u8 *status_line, u32 line_len, s32 *http_major_ver, s32 *http_m
 					var0 = var0 + 1;
 				}
 
-				ret = -0x7fbcdfa0;
+				ret = SCE_PARSE_HTTP_INVALID_RESPONSE;
 
 				if ((s32)*var1 == 0x2e)
 				{
 					var1 = status_line + var0 + 2;
-					ret = -0x7fbcdfa0;
 
 					if ((*(u8 *)((s32)*var1 + 1) & 4) != 0)
 					{
@@ -90,7 +112,7 @@ s32 sub_000003A0(u8 *status_line, u32 line_len, s32 *http_major_ver, s32 *http_m
 							var0 = var0 + 1;
 						}
 
-						ret = -0x7fbcdfa0;
+						ret = SCE_PARSE_HTTP_INVALID_RESPONSE;
 
 						if ((s32)*var1 == 0x20)
 							ret = var0 + 2;
@@ -155,7 +177,7 @@ s32 sub_0000061C(u8 *status_line, u32 line_len, u8 **reason_phrase, u32 *phrase_
 		var1 = status_line + var2;
 	}
 	
-	return -0x7fbcdfa0;
+	return SCE_PARSE_HTTP_INVALID_RESPONSE;
 }
 
 // Subroutine sub_000006CC - Address 0x000006CC
