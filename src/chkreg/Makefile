@@ -6,6 +6,6 @@ OBJS = chkreg.o
 
 #DEBUG = 1
 
-LIBS = -lThreadManForKernel -lsceIdStorage_driver -lpspsemaphore
+LIBS = -lsceIdStorage_driver -lThreadManForKernel -lpspsemaphore
 
 include ../../lib/build.mak
